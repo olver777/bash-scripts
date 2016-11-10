@@ -2,7 +2,7 @@
 
 sub kursy {
 #    $val = $_[0];
-    $date = `cat /mnt/t/nbumail_in/NBU/VAL*|iconv -f CP866 -t UTF8 -|grep Установити|awk '{print \$4}'|gawk -F\/ '{print \$3\$2\$1}'`;
+    $date = `cat /mnt/t/nbumail_in/NBU/VAL*|iconv -f CP866 -t UTF8 -|grep Установити|awk '{print \$3}'|gawk -F\. '{print \$3\$2\$1}'`;
 #    $val_abbr = `cat /data/nbumail_in/NBU/VAL*|grep $val|awk '{print \$2}'`;
     $val_abbr = $_[0];
     $val = `cat /mnt/t/nbumail_in/NBU/VAL*|grep $val_abbr|awk '{print \$1}'`;
