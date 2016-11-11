@@ -1,9 +1,10 @@
 #!/bin/bash
 
-IF_EXT="enp6s0f1"
-IF_LAN="enp6s0f0"
-IF_DMZ="enp5s1"
-DMZ_IFOBS="192.168.9.2"
+IF_LAN1="enp2s3"
+IF_LAN9="enp2s6"
+IF_DMZ="enp2s1"
+IF_VPN="tun0"
+DMZ_IFOBS="192.168.1.2"
 IFOBS_BL="173.1.9.230"
 
 ## CLEAN ALL TABLES
@@ -26,9 +27,9 @@ iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 
 ## ENABLE SNAT
-iptables -t nat -A POSTROUTING -o $IF_EXT -j MASQUERADE
+iptables -t nat -A POSTROUTING -o $IF_VPN -j MASQUERADE
 
-## ENABLE  OUT IN INET
+## ENABLE  OUT IN 
 iptables -A FORWARD -i $IF_LAN -o $IF_EXT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 iptables -A FORWARD -i $IF_EXT -o $IF_LAN -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
@@ -43,41 +44,44 @@ iptables -I INPUT -p icmp -m limit --limit 50/minute -j LOG
 
 ## DMZ
 ## ENABLE DNAT FOR iFOBS_PL IN DMZ
-iptables -t nat -A PREROUTING -p tcp -i $IF_EXT --dport 7002 -j DNAT --to-destination $DMZ_IFOBS
+iptables -t nat -A PREROUTING -p tcp -i $IF_LAN1 --dport 7002 -j DNAT --to-destination $DMZ_IFOBS
 
 ## FROM DMZ TO INET 
-iptables -A FORWARD -i $IF_DMZ -o $IF_EXT -j ACCEPT
-iptables -A FORWARD -i $IF_EXT -o $IF_DMZ -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_EXT -o $IF_DMZ -d $DMZ_IFOBS --dport 7002 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i $IF_DMZ -o $IF_LAN1 -j ACCEPT
+iptables -A FORWARD -i $IF_LAN1 -o $IF_DMZ -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN1 -o $IF_DMZ -d $DMZ_IFOBS --dport 7002 -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 ## INTRANET  ROUTING
-iptables -A FORWARD -i $IF_LAN -o $IF_DMZ -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 7002 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 1098 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 1099 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 4444 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 4445 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 4446 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 4447 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 4448 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_LAN -o $IF_DMZ -d $DMZ_IFOBS --dport 16080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i $IF_DMZ -o $IF_LAN -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN -d $IFOBS_BL --dport 16080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN -d $IFOBS_BL --dport 1098 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN -d $IFOBS_BL --dport 1099 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN -d $IFOBS_BL --dport 4444 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN -d $IFOBS_BL --dport 4445 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN -d $IFOBS_BL --dport 4446 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN -d $IFOBS_BL --dport 4447 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN -d $IFOBS_BL --dport 4448 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i $IF_LAN9 -o $IF_DMZ -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 7002 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 1098 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 1099 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 4444 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 4445 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 4446 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 4447 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 4448 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_LAN9 -o $IF_DMZ -d $DMZ_IFOBS --dport 16080 -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i $IF_DMZ -o $IF_LAN9 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN9 -d $IFOBS_BL --dport 16080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN9 -d $IFOBS_BL --dport 1098 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN9 -d $IFOBS_BL --dport 1099 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN9 -d $IFOBS_BL --dport 4444 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN9 -d $IFOBS_BL --dport 4445 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN9 -d $IFOBS_BL --dport 4446 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN9 -d $IFOBS_BL --dport 4447 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp -i $IF_DMZ -o $IF_LAN9 -d $IFOBS_BL --dport 4448 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 
 
 ## FROM INET TO SERVER PORTS
-iptables -A INPUT -i $IF_EXT -p udp --dport 1194 -j ACCEPT
+iptables -A INPUT -i $IF_LAN1 -p udp --dport 1194 -j ACCEPT
+iptables -A OUTPUT -o $IF_LAN1 -p udp --sport 1194 -j ACCEPT
 
 ## SSH 
-iptables -A INPUT -i $IF_LAN -p tcp -s 173.1.9.22 --dport 22 -j ACCEPT
-iptables -A INPUT -i $IF_LAN -p tcp -s 173.1.9.87 --dport 22 -j ACCEPT
+iptables -A INPUT -i $IF_LAN1 -p tcp -s 173.1.1.10 --dport 22 -j ACCEPT
+iptables -A INPUT -i $IF_LAN9 -p tcp -s 173.1.9.22 --dport 22 -j ACCEPT
+iptables -A INPUT -i $IF_LAN9 -p tcp -s 173.1.9.87 --dport 22 -j ACCEPT
 
-## Post forwarding
-iptables -t nat -A PREROUTING -d 46.164.134.26 -p tcp -m tcp --dport 25 --to-source 173.1.9.10
+## PROXY
+iptables -A PREROUTING -s 173.1.1.0/24 -p tcp -m multiport --dports 80,8080 -j DNAT --to-destination 173.1.1.1:3128
+
