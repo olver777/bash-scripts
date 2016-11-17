@@ -17,23 +17,30 @@ MATRIX="0123456789ABCDEFGHIJKLMNOPQRSTUVWYZabcdefghijklmnopqrstuvwxyz"
 # Довжина паролю за замовчуванням (мінімальна довжина паролю)
 #+ якщо користувач не вводе довжину паролю при запуску скрипту
 LENGTH="8"
-num="$1"
+num=$1
 
 # Об'являємо функцію генерації випадкового паролю
 generate_password ()
 {
+number=$1
+
+if [ -z "$1" ] 
+then
+	number=$LENGTH
+fi
+
 # Переналаштовуємо начальне число генератора псевдовипадкових чисел
 #+ (потрібно для більшої випадковості генеруємого паролю) 
 SEED=$(head -1 /dev/urandom | od -N 1 | awk '{ print $2 }')
 RANDOM=$SEED
 
-if [ $num -le $LENGTH ]
+if [ $number -le $LENGTH ]
 then
-	num=$LENGTH
+	number=$LENGTH
 fi
 
 # Генеруємо пароль
-while [ "${n:=1}" -le "${num:=$LENGTH}" ]
+while [ "${n:=1}" -le "${number:=$LENGTH}" ]
 do
 	PASS="$PASS${MATRIX:$(($RANDOM%${#MATRIX})):1}"
 	let n+=1
@@ -49,18 +56,21 @@ echo
 if [ -z $1 ]
 # Якщо не введено аргументів
 then
+	echo
 	echo "Не було вказано довжини паролю. Пароль згенерується з мінімальною довжиною в 8 символів"
 	echo "Для генерації паролю заданої довжини використовуйте скрипт з параметрами"
+	echo
 	echo "Наприклад: $0 10 - згенерує випадковий пароль довжиною 10 символів"
-	generate_password
+	generate_password "$num"
 elif [ $num -gt $LENGTH ]
 then
-	generate_password
+	generate_password "$num"
 elif [ $num -le $LENGTH ]
 then
+	echo
 	echo "Введена довжина паролю менша мінімальної"
 	echo "Буде згенеровано пароль довжиною 8 символів"
-	generate_password
+	generate_password "$num"
 fi
 
 exit 0
