@@ -13,7 +13,7 @@
 E_BADARGS=65
 
 # Матриця символів з яких буде генеруватися пароль
-MATRIX="0123456789ABCDEFGHIJKLMNOPQRSTUVWYZabcdefghijklmnopqrstuvwxyz"
+MATRIX="0123456789ABCDEFGHIJKLMNOPQRSTUVWYZabcdefghijklmnopqrstuvwxyz@#$%^&*()"
 
 # Довжина паролю за замовчуванням (мінімальна довжина паролю)
 #+ якщо користувач не вводе довжину паролю при запуску скрипту
@@ -53,8 +53,10 @@ done
 
 # Виводимо пароль на екран
 echo
-echo "Згенерований пароль: $PASS"
+echo -e "Згенерований пароль: \E[32;40m$PASS"
 echo
+tput sgr0
+return
 }
 
 # Перевіряємо чи було введено довжину генеруємого паролю та чи довжина паролю менша 8 символів
